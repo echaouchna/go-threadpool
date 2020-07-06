@@ -63,7 +63,7 @@ func RunWorkers(queue chan Action, jobFunctions map[string]JobFunc, workersNumbe
 	}
 	runtime.GOMAXPROCS(cpuCount)
 
-	log.Infof("Running %d jobs", jobCount)
+	log.Infof("Running %d workers", jobCount)
 
 	playCommands := make([]chan bool, jobCount)
 	pauseCommands := make([]chan bool, jobCount)
