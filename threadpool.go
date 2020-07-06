@@ -4,7 +4,7 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/golang/glog"
+	log "github.com/sirupsen/logrus"
 )
 
 // JobFunc the function type to be run by the jobs
@@ -63,7 +63,7 @@ func RunWorkers(queue chan Action, jobFunctions map[string]JobFunc, workersNumbe
 	}
 	runtime.GOMAXPROCS(cpuCount)
 
-	glog.Infof("Running %d jobs", jobCount)
+	log.Infof("Running %d jobs", jobCount)
 
 	playCommands := make([]chan bool, jobCount)
 	pauseCommands := make([]chan bool, jobCount)
