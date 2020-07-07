@@ -24,14 +24,14 @@ func threadMain(id int, queue chan Action, wg *sync.WaitGroup, jobs map[string]J
 	pauseCommand = make(chan bool, 1)
 	playCommand = make(chan bool, 1)
 	go func() {
+		wg.Add(1)
+		defer wg.Done()
 		for {
 			select {
 			case action := <-queue:
-				wg.Add(1)
 				if job, ok := jobs[action.Name]; ok {
 					job(id, action.Data)
 				}
-				wg.Done()
 			case <-quitCommand:
 				return
 			case <-pauseCommand:
