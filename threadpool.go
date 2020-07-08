@@ -26,21 +26,30 @@ func threadMain(id int, queue chan Action, wg *sync.WaitGroup, jobs map[string]J
 	go func() {
 		wg.Add(1)
 		defer wg.Done()
+		defer close(quitCommand)
+		defer close(pauseCommand)
+		defer close(playCommand)
 		for {
 			select {
 			case action := <-queue:
+				log.Debugf("Thread %d running", id)
 				if job, ok := jobs[action.Name]; ok {
 					job(id, action.Data)
 				}
 			case <-quitCommand:
+				log.Debugf("Thread %d quitting", id)
 				return
 			case <-pauseCommand:
+				log.Debugf("Thread %d pausing", id)
 				select {
 				case <-playCommand:
+					log.Debugf("Thread %d playing", id)
 				case <-quitCommand:
+					log.Debugf("Thread %d quitting", id)
 					return
 				}
 			case <-playCommand:
+				log.Debugf("Thread %d playing", id)
 			}
 		}
 	}()
@@ -75,7 +84,6 @@ func RunWorkers(queue chan Action, jobFunctions map[string]JobFunc, workersNumbe
 		for _, pauseCommand := range pauseCommands {
 			pauseCommand <- true
 		}
-		wg.Wait()
 	}
 	play = func() {
 		for _, playCommand := range playCommands {
