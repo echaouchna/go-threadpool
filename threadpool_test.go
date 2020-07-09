@@ -25,7 +25,7 @@ func TestPausePlayStopBuffered(t *testing.T) {
 	length := len(channel)
 
 	if length != 0 {
-		t.Errorf("len(channel) = %v, want %v", length, 0)
+		t.Errorf("start: len(channel) = %v, want %v", length, 0)
 	}
 
 	pause()
@@ -59,7 +59,7 @@ func TestPausePlayStopBuffered(t *testing.T) {
 	length = len(channel)
 
 	if length != 1 {
-		t.Errorf("pause: len(channel) = %v, want %v", length, 1)
+		t.Errorf("stop: len(channel) = %v, want %v", length, 1)
 	}
 }
 
@@ -79,7 +79,7 @@ func TestPausePlayStopUnbuffered(t *testing.T) {
 	length := len(channel)
 
 	if length != 0 {
-		t.Errorf("len(channel) = %v, want %v", length, 0)
+		t.Errorf("start: len(channel) = %v, want %v", length, 0)
 	}
 
 	pause()
@@ -96,11 +96,11 @@ func TestPausePlayStopUnbuffered(t *testing.T) {
 	sleep()
 
 	if getStatus().String() != "paused" {
-		t.Errorf("pause: len(channel) = %v, want %v", getStatus().String(), "paused")
+		t.Errorf("pause: getStatus().String() = %v, want %v", getStatus().String(), "paused")
 	}
 
 	if !blocked {
-		t.Errorf("pause: len(channel) = %v, want %v", blocked, true)
+		t.Errorf("pause: blocked = %v, want %v", blocked, true)
 	}
 
 	play()
@@ -110,17 +110,17 @@ func TestPausePlayStopUnbuffered(t *testing.T) {
 	sleep()
 
 	if getStatus().String() != "running" {
-		t.Errorf("pause: len(channel) = %v, want %v", getStatus().String(), "running")
+		t.Errorf("play: getStatus().String() = %v, want %v", getStatus().String(), "running")
 	}
 
 	if blocked {
-		t.Errorf("pause: len(channel) = %v, want %v", blocked, false)
+		t.Errorf("play: blocked = %v, want %v", blocked, false)
 	}
 
 	length = len(channel)
 
 	if length != 0 {
-		t.Errorf("len(channel) = %v, want %v", length, 0)
+		t.Errorf("play: len(channel) = %v, want %v", length, 0)
 	}
 
 	stopJobs()
@@ -128,6 +128,6 @@ func TestPausePlayStopUnbuffered(t *testing.T) {
 	sleep()
 
 	if getStatus().String() != "stopped" {
-		t.Errorf("pause: len(channel) = %v, want %v", getStatus().String(), "stopped")
+		t.Errorf("stop: getStatus().String() = %v, want %v", getStatus().String(), "stopped")
 	}
 }
