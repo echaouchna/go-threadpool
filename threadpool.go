@@ -22,6 +22,14 @@ type Action struct {
 // Status type
 type Status uint32
 
+// Handler is an object used to control the threadpool
+type Handler struct {
+	Pause     func()
+	Play      func()
+	Quit      func()
+	GetStatus func() Status
+}
+
 // Convert the Status to a string. E.g. Running becomes "running".
 func (status Status) String() (strStatus string) {
 	strStatus = "undefined"
@@ -52,7 +60,7 @@ const (
 	Stopped
 )
 
-func threadMain(id int, queue chan Action, wg *sync.WaitGroup, jobs map[string]JobFunc) (playCommand chan bool, pauseCommand chan bool, quitCommand chan bool) {
+func threadMain(id int, queue chan Action, wg *sync.WaitGroup, jobs map[string]JobFunc) (playCommand, pauseCommand, quitCommand chan bool) {
 	quitCommand = make(chan bool, 1)
 	pauseCommand = make(chan bool, 1)
 	playCommand = make(chan bool, 1)
@@ -92,8 +100,9 @@ func threadMain(id int, queue chan Action, wg *sync.WaitGroup, jobs map[string]J
 // * workersNumber the number of jobs
 //   - if workersNumber <= 0 or workersNumber > 2*cpuCount ==> runtime.NumCPU() will be used
 //   - otherwise workersNumber will be used
-func RunWorkers(queue chan Action, jobFunctions map[string]JobFunc, workersNumber int) (play func(), pause func(), quit func(), getStatus func() Status) {
+func RunWorkers(queue chan Action, jobFunctions map[string]JobFunc, workersNumber int) (handler Handler) {
 	var wg sync.WaitGroup
+	handler = Handler{}
 	cpuCount := runtime.NumCPU()
 	jobCount := cpuCount
 	if workersNumber > 0 && workersNumber <= 2*cpuCount {
@@ -110,26 +119,26 @@ func RunWorkers(queue chan Action, jobFunctions map[string]JobFunc, workersNumbe
 	for i := 0; i < jobCount; i++ {
 		playCommands[i], pauseCommands[i], quitCommands[i] = threadMain(i+1, queue, &wg, jobFunctions)
 	}
-	pause = func() {
+	handler.Pause = func() {
 		for _, pauseCommand := range pauseCommands {
 			pauseCommand <- true
 		}
 		currentStatus = Paused
 	}
-	play = func() {
+	handler.Play = func() {
 		for _, playCommand := range playCommands {
 			playCommand <- true
 		}
 		currentStatus = Running
 	}
-	quit = func() {
+	handler.Quit = func() {
 		for _, quitCommand := range quitCommands {
 			quitCommand <- true
 		}
 		wg.Wait()
 		currentStatus = Stopped
 	}
-	getStatus = func() Status {
+	handler.GetStatus = func() Status {
 		return currentStatus
 	}
 	return

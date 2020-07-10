@@ -14,7 +14,7 @@ func TestPausePlayStopBuffered(t *testing.T) {
 	defer close(channel)
 	jobs := make(map[string]JobFunc)
 	jobs["dumb"] = func(id int, value interface{}) {}
-	play, pause, stop, _ := RunWorkers(channel, jobs, 0)
+	handler := RunWorkers(channel, jobs, 0)
 
 	for i := 0; i < 10; i++ {
 		channel <- Action{"dumb", 0}
@@ -28,7 +28,7 @@ func TestPausePlayStopBuffered(t *testing.T) {
 		t.Errorf("start: len(channel) = %v, want %v", length, 0)
 	}
 
-	pause()
+	handler.Pause()
 
 	sleep()
 
@@ -40,7 +40,7 @@ func TestPausePlayStopBuffered(t *testing.T) {
 		t.Errorf("pause: len(channel) = %v, want %v", length, 1)
 	}
 
-	play()
+	handler.Play()
 
 	sleep()
 
@@ -50,7 +50,7 @@ func TestPausePlayStopBuffered(t *testing.T) {
 		t.Errorf("play: len(channel) = %v, want %v", length, 0)
 	}
 
-	stop()
+	handler.Quit()
 
 	sleep()
 
@@ -68,7 +68,7 @@ func TestPausePlayStopUnbuffered(t *testing.T) {
 	defer close(channel)
 	jobs := make(map[string]JobFunc)
 	jobs["dumb"] = func(id int, value interface{}) {}
-	play, pause, stopJobs, getStatus := RunWorkers(channel, jobs, 0)
+	handler := RunWorkers(channel, jobs, 0)
 
 	for i := 0; i < 10; i++ {
 		channel <- Action{"dumb", 0}
@@ -82,7 +82,7 @@ func TestPausePlayStopUnbuffered(t *testing.T) {
 		t.Errorf("start: len(channel) = %v, want %v", length, 0)
 	}
 
-	pause()
+	handler.Pause()
 
 	sleep()
 
@@ -95,22 +95,22 @@ func TestPausePlayStopUnbuffered(t *testing.T) {
 
 	sleep()
 
-	if getStatus().String() != "paused" {
-		t.Errorf("pause: getStatus().String() = %v, want %v", getStatus().String(), "paused")
+	if handler.GetStatus().String() != "paused" {
+		t.Errorf("pause: getStatus().String() = %v, want %v", handler.GetStatus().String(), "paused")
 	}
 
 	if !blocked {
 		t.Errorf("pause: blocked = %v, want %v", blocked, true)
 	}
 
-	play()
+	handler.Play()
 
 	channel <- Action{"dumb", 0}
 
 	sleep()
 
-	if getStatus().String() != "running" {
-		t.Errorf("play: getStatus().String() = %v, want %v", getStatus().String(), "running")
+	if handler.GetStatus().String() != "running" {
+		t.Errorf("play: getStatus().String() = %v, want %v", handler.GetStatus().String(), "running")
 	}
 
 	if blocked {
@@ -123,11 +123,11 @@ func TestPausePlayStopUnbuffered(t *testing.T) {
 		t.Errorf("play: len(channel) = %v, want %v", length, 0)
 	}
 
-	stopJobs()
+	handler.Quit()
 
 	sleep()
 
-	if getStatus().String() != "stopped" {
-		t.Errorf("stop: getStatus().String() = %v, want %v", getStatus().String(), "stopped")
+	if handler.GetStatus().String() != "stopped" {
+		t.Errorf("stop: getStatus().String() = %v, want %v", handler.GetStatus().String(), "stopped")
 	}
 }
